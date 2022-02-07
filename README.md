@@ -21,3 +21,28 @@ If you use some package please add it to the `requirements.txt`. You can get ins
 - `reports` for reporting model performance, etc.
 - `src` all the classes, methods for model development, file manipulation, data processing, visualization
 
+## matlab instruction for lewos
+
+- Install matlab
+- Install required toolboxes (home tab add-ons icon)
+<img width="223" alt="add-ons" src="https://user-images.githubusercontent.com/36380548/152797738-39fb2f45-9e1a-4f94-861d-390a11575e4e.png">
+
+- - Text Analytics ToolBox
+- - Deep Learning Toolbox
+- - Statistics and Machine Learning Toolbox
+- - Lidar Toolbox
+- - Image Processing Toolbox
+- - Computer Vision Toolbox
+- add `tile_10_-10.las` to LeWoS folder
+- add to LeWoS folder new function loadDataPoints.m with following code and run it:  
+```
+lasReader = lasFileReader("tile_10_-10.las");
+ptCloud = readPointCloud(lasReader);
+allRows = ptCloud.Location(:,:);
+```
+- In workspace new variable `allRows` will appear
+- Add to LeWoS folder new function pickanameyourself.m with following code and run it:
+```
+[BiLabel, BiLabel_Regu] = RecursiveSegmentation_release(allRows, 0.135, 0, 1)
+```
+
