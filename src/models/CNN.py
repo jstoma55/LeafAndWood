@@ -4,17 +4,20 @@ class CNNModel(nn.Module):
     def __init__(self, num_classes=2):
         super(CNNModel, self).__init__()
         
-        self.conv_block = nn.Sequential(
+        self.conv_block_1 = nn.Sequential(
             nn.Conv3d(7, 32, kernel_size=(3, 3, 3), padding=0),
             nn.LeakyReLU(),
             nn.MaxPool3d((2, 2, 2)),
+        )
+
+        self.conv_block_2 = nn.Sequential(
             nn.Conv3d(32, 64, kernel_size=(3, 3, 3), padding=0),
             nn.LeakyReLU(),
             nn.MaxPool3d((2, 2, 2))
         )
 
         self.linear_block = nn.Sequential(
-            nn.Linear(96000000, 128),
+            nn.Linear(3317888, 128),
             nn.LeakyReLU(),
             nn.BatchNorm1d(128),
             nn.Dropout(p=0.15),
@@ -22,6 +25,7 @@ class CNNModel(nn.Module):
         )        
 
     def forward(self, x):
-        out = self.conv_block(x)
+        out = self.conv_block_1(x)
+        out = self.conv_block_2(out)
         out = out.view(out.size(0), -1) 
         return self.linear_block(out)
