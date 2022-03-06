@@ -24,7 +24,7 @@ If you use some package please add it to the `requirements.txt`. You can get ins
 
 ## instruction for cloud compare
 * First download and install CloudCompare https://www.danielgm.net/cc/  
-* Open CloudCompare and drop file (from puhti path LeafAndWood/data/labeled/) to main window.
+* Open CloudCompare and drop file (from puhti path LeafAndWood/data/labeled/) to main window and "Apply all".
 <img width="1006" alt="Näyttökuva 2022-3-6 kello 20 19 22" src="https://user-images.githubusercontent.com/36380548/156937601-fb4744cb-cf7f-478c-9c3a-4f05317d758b.png">   
 
 * Select tile, go to properties window, in scalar field secition choose "Scalar Field #5"
