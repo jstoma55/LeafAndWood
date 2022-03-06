@@ -60,7 +60,7 @@ If you use some package please add it to the `requirements.txt`. You can get ins
 
 <img width="99" alt="Näyttökuva 2022-3-6 kello 21 26" src="https://user-images.githubusercontent.com/36380548/156938994-15b103c8-94a0-44a0-9e38-7f89afc55198.png">  
 
-* Now pick-n-drop combined cloud "CC#0" to original folder together with "Cloud.extract"  
+* Now pick-n-drop combined cloud "CC#0" to original folder together with "Cloud.extract" and remove other files from original folder.  
 <img width="430" alt="Näyttökuva 2022-3-6 kello 20 36 52" src="https://user-images.githubusercontent.com/36380548/156939118-725a6d26-6fee-4cdc-a712-b141e12fdb43.png">  
 
 * Now select both of them and merge once again
