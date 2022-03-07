@@ -40,7 +40,7 @@ class Voxelizer:
         for point in full_list:
             x, y, z = point[[self.x, self.y, self.z]]
             full_3D_matrix[int((x - low_x) * magnifier) - 1][int((y - low_y) * magnifier) - 1][int((z - low_z) * magnifier) - 1] = point
-            no_label_3D_matrix[int((x - low_x) * magnifier) - 1][int((y - low_y) * magnifier) - 1][int((z - low_z) * magnifier) - 1] = point[:7]
+            no_label_3D_matrix[int((x - low_x) * magnifier) - 1][int((y - low_y) * magnifier) - 1][int((z - low_z) * magnifier) - 1] = point[:6]
             label[int((x - low_x) * magnifier) - 1][int((y - low_y) * magnifier) - 1][int((z - low_z) * magnifier) - 1] = point[-1]
         return full_3D_matrix, no_label_3D_matrix, label
     
@@ -54,21 +54,14 @@ class Voxelizer:
             int(self.data[:, self.z].max()),
         ]
 
-def voxelize(input_dir_path, output_file_path, size=100):
-    voxels = []
-    labels = []
+def voxelize(input_dir_path, output_dir_path, size=100):
     print('Voxel Size: %s' % size)
     for file in os.listdir(input_dir_path):
         input_path = os.path.join(input_dir_path, file)  
+        output_path = os.path.join(output_dir_path, file.replace("txt", "h5py").replace("labeled", "voxelized"))  
         voxelizer = Voxelizer(input_path)
         full_3D_matrix,  no_label_3D_matrix, label = voxelizer(size)
-
-        # this condition is needed due to some data being 10x9 meters
-        if (full_3D_matrix.shape[:2] == (100, 100)):
-            voxels.append(no_label_3D_matrix)
-            labels.append(label)
-            print('Voxelized: %s | Shape: %s' % (file, full_3D_matrix.shape))
-    h5f = h5py.File(output_file_path, 'w')
-    h5f.create_dataset('voxels', data = voxels)
-    h5f.create_dataset('labels', data = labels)
-    print('Output: %s' % (output_file_path))
+        h5f = h5py.File(output_path, 'w')
+        h5f.create_dataset('voxels', data = no_label_3D_matrix)
+        h5f.create_dataset('labels', data = label)
+        print('Voxelized: %s | Shape: %s | Output: %s' % (file, full_3D_matrix.shape, output_path))
