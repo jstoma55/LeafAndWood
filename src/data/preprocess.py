@@ -158,3 +158,19 @@ def split_for_training(
             for tile in tiles[num_train_tiles + num_test_tiles:]:
                 h5f.copy(h5f[tile], dev)
         print("Produced dev dataset:", h5_dev)
+
+# Get the frequency of labels per dataset
+def get_label_freq(data_path):
+    label_freq = {}
+    with h5py.File(data_path, 'r+') as h5f:
+        tiles = list(h5f.keys())
+        for tile in tiles:
+            labels, freq = np.unique(h5f[tile]["labels"][:], return_counts=True)
+            for i, label in enumerate(labels):
+                label = str(int(label))
+                if label in label_freq:
+                    label_freq[label] += freq[i]
+                else:
+                    label_freq[label] = freq[i]
+        h5f.create_dataset('freq', data=list(label_freq.values()))
+    return label_freq
