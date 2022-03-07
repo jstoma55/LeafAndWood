@@ -1,10 +1,6 @@
-# Imports
 import sys
 sys.path.append("..")
-from os import listdir
-from os.path import isfile, join
 import h5py
-import os
 import numpy as np
 from torch.utils.data import Dataset
 import MinkowskiEngine as ME
@@ -17,8 +13,10 @@ class TrainingDataset(Dataset):
         self.keys = list(self.data.keys())
         self.debug = debug
         print("Train set size: ",len(self.keys))
+
     def __len__(self):
         return len(self.data.keys())
+
     def __getitem__(self, idx):
         key = self.keys[idx]
         coords = self.data[key]['coords'][:]
@@ -39,6 +37,7 @@ class TrainingDataset(Dataset):
             ignore_label=-100)
         return discrete_coords, unique_feats, unique_labels
     
+
 class PredictionDataset(Dataset):
     def __init__(self, data_path, quantization_size=0.005, debug=False):
         self.data_path = data_path
@@ -47,8 +46,10 @@ class PredictionDataset(Dataset):
         self.keys = list(self.data.keys())
         self.debug = debug
         print("Test set size: ",len(self.keys))
+
     def __len__(self):
         return len(self.data.keys())
+
     def __getitem__(self, idx):
         key = self.keys[idx]
         coords = self.data[key]['coords'][:]/self.quantization_size

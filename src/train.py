@@ -1,10 +1,7 @@
 # Imports
 import sys
 #sys.path.append("..")
-from os import listdir
-from os.path import isfile, join
 import argparse
-import h5py
 import os
 import numpy as np
 import torch
@@ -16,14 +13,16 @@ from torch.autograd import Variable
 from torch.utils.data import Dataset
 import MinkowskiEngine as ME
 import MinkowskiFunctional as MF
-from models import Seg1, Seg2, Seg3, count_parameters, FrankenSeg
-from data import TrainingDataset, PredictionDataset
-from util import accuracy
+
+# Local Imports
+from models.models import Seg1, Seg2, Seg3, count_parameters, FrankenSeg
+from data.datasets import TrainingDataset, PredictionDataset
+from models.util import accuracy
 
 config_file = None
 model_path = None
 debug_mode = True
-log_path = "trainlog.txt"
+log_path = "logs/train_log.txt"
 def log(txt):
     print(txt)
     if not debug_mode:
