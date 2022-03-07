@@ -165,7 +165,7 @@ def get_label_freq(data_path):
     with h5py.File(data_path, 'r+') as h5f:
         tiles = list(h5f.keys())
         for tile in tiles:
-            if tile is 'freq':
+            if tile == 'freq':
                 continue
             labels, freq = np.unique(h5f[tile]['labels'][:], return_counts=True)
             for i, label in enumerate(labels):
