@@ -34,6 +34,7 @@ def slice_tiles(
     count = 0
 
     with h5py.File(h5_output_path, 'w') as h5f:
+        tiles = h5f.create_group("tiles")
         for file in files:
             df = pd.read_csv(join(labeled_data_dir, file), sep=" ", header=None)
             data = df.to_numpy()
@@ -66,23 +67,25 @@ def slice_tiles(
                         coords = tile_data[:,0:3]
                         feats = tile_data[:,3:5]
                         labels = tile_data[:,-1]
+
                         tile_name = "tile_" + str(count)
                         processed_tiles.append(tile_name)
-                        tile = h5f.create_group(tile_name)
+                        tile = tiles.create_group(tile_name)
                         tile.create_dataset('coords', data=coords)
                         tile.create_dataset("feats", data=feats)
                         tile.create_dataset('labels', data=labels)
+                        
                         print("Number of Mini Tiles",  count)
                         count += 1
 
 
             # Perfrom tile with less than min points merging
             for tile in processed_tiles:
-                if h5f[tile]["coords"].shape[0] < min_point_num:
+                if tiles[tile]["coords"].shape[0] < min_point_num:
                     print("Tile with less than minimum points:", tile)
-                    coords = h5f[tile]["coords"][:]
-                    feats = h5f[tile]["feats"][:]
-                    labels = h5f[tile]["labels"][:]
+                    coords = tiles[tile]["coords"][:]
+                    feats = tiles[tile]["feats"][:]
+                    labels = tiles[tile]["labels"][:]
                     xyz_max = np.array([np.max(coords[:,0]), np.max(coords[:,1]), np.max(coords[:,2])])
                     xyz_min = np.array([np.min(coords[:,0]), np.min(coords[:,1]), np.min(coords[:,2])])
                     closest_tile = None
@@ -93,7 +96,7 @@ def slice_tiles(
                     for tile_2 in processed_tiles:
                         if tile_2 == tile or tile_2 in deleted_tiles:
                             continue
-                        current_tile_data = h5f[tile_2]["coords"][:]
+                        current_tile_data = tiles[tile_2]["coords"][:]
                         close_max = current_tile_data[KDTree(current_tile_data).query(xyz_max)[1]]
                         close_min = current_tile_data[KDTree(current_tile_data).query(xyz_min)[1]]
                         if closest_tile is None:
@@ -111,10 +114,10 @@ def slice_tiles(
                                 closest_min = temp_closest_min
                     print("Closest:", closest_tile)
                     print("Merging:", tile, "to", closest_tile, "\n")
-                    np.concatenate((h5f[closest_tile]["coords"][:], coords))
-                    np.concatenate((h5f[closest_tile]["feats"][:], feats))
-                    np.concatenate((h5f[closest_tile]["labels"][:], labels))
-                    del h5f[tile]
+                    np.concatenate((tiles[closest_tile]["coords"][:], coords))
+                    np.concatenate((tiles[closest_tile]["feats"][:], feats))
+                    np.concatenate((tiles[closest_tile]["labels"][:], labels))
+                    del tiles[tile]
                     deleted_tiles.append(tile)
             print("Total Merged Tiles:", str(len(deleted_tiles)))
 
@@ -131,8 +134,9 @@ def split_for_training(
     with h5py.File(data_path, 'r') as h5f:
 
         # Get number of tiles per split
-        tiles = list(h5f.keys())
-        num_tiles = len(tiles)
+        tiles = h5f['tiles']
+        tile_keys = list(tiles.keys())
+        num_tiles = len(tile_keys)
         num_train_tiles = int(num_tiles * training_size)
         num_test_tiles = int(num_tiles * test_size)
         num_validation_tiles = int(num_tiles * dev_size)
@@ -141,40 +145,43 @@ def split_for_training(
         print("Validation Number of Tiles:", num_validation_tiles)
 
         # Shuffle the data
-        random.shuffle(tiles)
+        random.shuffle(tile_keys)
 
         # Write train h5py
         with h5py.File(h5_train, 'w') as train:
-            for tile in tiles[:num_train_tiles]:
-                h5f.copy(h5f[tile], train)
+            train_tiles = train.create_group("tiles")
+            for tile in tile_keys[:num_train_tiles]:
+                tiles.copy(tiles[tile], train_tiles)
+        get_label_freq(h5_train)
         print("Produced train dataset:", h5_train)
         # Write test h5py
         with h5py.File(h5_test, 'w') as test:
-            for tile in tiles[num_train_tiles:num_train_tiles + num_test_tiles]:
-                h5f.copy(h5f[tile], test)
+            test_tiles = test.create_group("tiles")
+            for tile in tile_keys[num_train_tiles:num_train_tiles + num_test_tiles]:
+                tiles.copy(tiles[tile], test_tiles)
+        get_label_freq(h5_test)
         print("Produced test dataset:", h5_test)
         # Write dev h5py
         with h5py.File(h5_dev, 'w') as dev:
-            for tile in tiles[num_train_tiles + num_test_tiles:]:
-                h5f.copy(h5f[tile], dev)
+            dev_tiles = dev.create_group("tiles")
+            for tile in tile_keys[num_train_tiles + num_test_tiles:]:
+                tiles.copy(tiles[tile], dev_tiles)
+        get_label_freq(h5_dev)
         print("Produced dev dataset:", h5_dev)
 
 # Get the frequency of labels per dataset
 def get_label_freq(data_path):
     label_freq = {}
     with h5py.File(data_path, 'r+') as h5f:
-        tiles = list(h5f.keys())
-        for tile in tiles:
-            if tile == 'freq':
-                del h5f[tile]
-                continue
-            labels, freq = np.unique(h5f[tile]['labels'][:], return_counts=True)
+        tiles = h5f['tiles']
+        tile_keys = list(tiles.keys())
+        for tile in tile_keys:
+            labels, freq = np.unique(tiles[tile]['labels'][:], return_counts=True)
             for i, label in enumerate(labels):
                 label = str(int(label))
                 if label in label_freq:
                     label_freq[label] += freq[i]
                 else:
                     label_freq[label] = freq[i]
-        
-        h5f.create_dataset('freq', data=list(label_freq.values()))
+        tiles.attrs['freq'] = list(label_freq.values())
     return label_freq
